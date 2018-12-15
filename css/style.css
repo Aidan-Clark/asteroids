@@ -1,0 +1,10 @@
+.ship {
+  height: 50px;
+  width: 30px;
+  background-color: red;
+
+  position: relative;
+  left: 0px;
+  top: 696px;
+  transform: rotate(0deg);
+}
