@@ -1,10 +1,43 @@
+.screen {
+  height: 700px;
+  width: 700px;
+  border: 2px solid black;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -350px 0px 0px -350px;
+}
+
+.innerCircle {
+  height: 700px;
+  width: 700px;
+  border: 2px solid green;
+  border-radius: 50%;
+  position: absolute;
+}
+
+.outerCircle {
+  height: 1290px;
+  width: 1290px;
+  margin: auto;
+  border: 2px solid red;
+  border-radius: 50%;
+  position: relative;
+}
+
 .ship {
   height: 50px;
   width: 30px;
   background-color: red;
 
-  position: relative;
-  left: 0px;
-  top: 696px;
+  position: absolute;
+  left: 335px;
+  top: 335px;
   transform: rotate(0deg);
+}
+
+.asteroid {
+  background-color: blue;
+  border-radius: 50%;
+  position: absolute;
 }
