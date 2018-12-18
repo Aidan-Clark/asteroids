@@ -1,0 +1,3 @@
+Intersection 1 -> x    ---------------    x <- Intersection 2
+
+If either corner lying on that line is between the 2 intersections, then a collision has occured.

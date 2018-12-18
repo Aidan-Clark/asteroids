@@ -26,10 +26,7 @@
 }
 
 .ship {
-  height: 50px;
-  width: 30px;
   background-color: red;
-
   position: absolute;
   left: 335px;
   top: 335px;
