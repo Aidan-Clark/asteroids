@@ -6,6 +6,7 @@
   top: 50%;
   left: 50%;
   margin: -350px 0px 0px -350px;
+  margin-bottom: 0px;
 }
 
 .inner-circle {
@@ -26,15 +27,39 @@
 }
 
 .ship {
-  background-color: red;
+  /* background-color: red; */
   position: absolute;
   left: 335px;
   top: 335px;
   transform: rotate(0deg);
+  background-image: url('../images/spaceship.png');
+  background-size: cover;
 }
 
 .asteroid {
-  background-color: blue;
+  /* background-color: blue; */
   border-radius: 50%;
   position: absolute;
+  background-image: url('../images/asteroid2.jpg');
+  background-position: right
+}
+
+.score {
+  font-size: 30px;
+}
+
+.top-bar {
+  position: absolute;
+  height: 315px;
+  background-color: black;
+  top: -1310px;
+  font-size: 0px;
+}
+
+.bottom-bar {
+  position:relative;
+  height: 400px;
+  background-color: black;
+  /* top: -610px; */
+  z-index: 2;
 }
