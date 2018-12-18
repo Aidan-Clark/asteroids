@@ -8,7 +8,7 @@
   margin: -350px 0px 0px -350px;
 }
 
-.innerCircle {
+.inner-circle {
   height: 700px;
   width: 700px;
   border: 2px solid green;
@@ -16,7 +16,7 @@
   position: absolute;
 }
 
-.outerCircle {
+.outer-circle {
   height: 1290px;
   width: 1290px;
   margin: auto;

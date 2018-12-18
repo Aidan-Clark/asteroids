@@ -17,9 +17,11 @@ $(function() {
   var viewingCircleRadius = 350;
   var spawnCircleRadius = 645;
   var asteroidArray = [];
-  var asteroidElements = $(".asteroid");
+  var $asteroidElements = $(".asteroid");
 
   var collision = false;
+
+  var asteroidSpawnTime = [500, 1500];
 
   // Get left: & top: CSS values
   shipPosition[0] = parseFloat($ship.css("left").match(/\d/g).join(""));
@@ -30,6 +32,12 @@ $(function() {
 
   // Convert to theta, then convert from radians to degrees
   shipTheta = Math.round(Math.acos(shipTheta) * (180/Math.PI))
+
+  // Gives random value between a minimum and maximum
+  function randomValue(min, max) {
+    var output = Math.floor((Math.random() * (max - min + 1)) + min);
+    return output;
+  }
 
   // Sets value to true if true if key has been pressed down
   $(document).keydown(function(event) {
@@ -86,9 +94,23 @@ $(function() {
       shipVelocity[1] = 0;
     }
 
-    shipPosition[0] += shipVelocity[0] * (refreshTime / 40);
-    shipPosition[1] += shipVelocity[1] * (refreshTime / 40);
-    $ship.css({"left": shipPosition[0] + "px", "top": shipPosition[1] + "px"});
+    var newShipPosition = [null, null];
+    newShipPosition[0] = shipPosition[0] + (shipVelocity[0] * (refreshTime / 40));
+    newShipPosition[1] = shipPosition[1] + (shipVelocity[1] * (refreshTime / 40));
+
+    var deltaX = 0.5 * (  (shipSize[0] * Math.cos(shipTheta * (Math.PI/180)) )  -  (shipSize[1] * Math.sin(shipTheta * (Math.PI/180)) )  );
+    var deltaY = 0.5 * (  (shipSize[1] * Math.cos(shipTheta * (Math.PI/180)) )  +  (shipSize[0] * Math.sin(shipTheta * (Math.PI/180)) )  );
+
+    if ((0 < (newShipPosition[0] + deltaX) && (newShipPosition[0] - deltaX) < 700) && (0 < (newShipPosition[1] + deltaY) && (newShipPosition[1] - deltaY) < 700)) {
+      shipPosition[0] = newShipPosition[0];
+      shipPosition[1] = newShipPosition[1];
+      $ship.css({"left": shipPosition[0] + "px", "top": shipPosition[1] + "px"});
+
+    } else {
+      shipVelocity[0] = 0;
+      shipVelocity[1] = 0;
+    }
+
   }
 
   // Calculates new velocity for ship
@@ -122,10 +144,11 @@ $(function() {
   }
 
   // Asteroid constructor function
-  var Asteroid = function(position, velocity, radius) {
+  var Asteroid = function(position, velocity, radius, enteredCenter) {
     this.position = position;
     this.velocity = velocity;
     this.radius = radius;
+    this.enteredCenter = enteredCenter;
   }
 
   // Makes an asteroid
@@ -134,34 +157,37 @@ $(function() {
 
     var velocityAngleMax = startAngle + 90 + (Math.asin(viewingCircleRadius/spawnCircleRadius) * (180/Math.PI));
     var velocityAngleMin = startAngle + 90 - (Math.asin(viewingCircleRadius/spawnCircleRadius) * (180/Math.PI));
-    var velocityAngle = Math.floor((Math.random() * (velocityAngleMax - velocityAngleMin + 1)) + velocityAngleMin);
-    var velocityTotal = Math.floor((Math.random() * (asteroidVelocityRange[1] - asteroidVelocityRange[0] + 1)) + asteroidVelocityRange[0]);
+    var velocityAngle = randomValue(velocityAngleMin, velocityAngleMax);
+    var velocityTotal = randomValue(asteroidVelocityRange[0], asteroidVelocityRange[1]);
     var velocity = [null, null];
     velocity[0] = velocityTotal * Math.cos(velocityAngle * (Math.PI/180));
     velocity[1] = velocityTotal * Math.sin(velocityAngle * (Math.PI/180));
 
-    var radius = Math.floor((Math.random() * asteroidRadiusRange[1] - asteroidRadiusRange[0] + 1) + asteroidRadiusRange[0]);
+    var radius = randomValue(asteroidRadiusRange[0], asteroidRadiusRange[1]);
 
     var position = [null, null];
     position[0] = (viewingCircleRadius - radius) + (spawnCircleRadius * Math.sin(startAngle * (Math.PI/180)));
     position[1] = (viewingCircleRadius - radius) - (spawnCircleRadius * Math.cos(startAngle * (Math.PI/180)));
 
-    var newAsteroid = new Asteroid(position, velocity, radius);
+    var newAsteroid = new Asteroid(position, velocity, radius, false);
     var $asteroidDiv = $('<div class="asteroid"></div>');
     $(".screen").append($asteroidDiv);
 
     asteroidArray.push(newAsteroid);
-    asteroidElements = $(".asteroids");
-    asteroidElements.last().css({"left": newAsteroid.position[0] + "px", "top": newAsteroid.position[1] + "px", "height": radius*2, "width": radius*2});
+    $asteroidElements = $(".asteroids");
+    $asteroidElements.last().css({"left": newAsteroid.position[0] + "px", "top": newAsteroid.position[1] + "px", "height": radius*2, "width": radius*2});
 
   }
 
   // Moves asteroid based on velocity
-  function asteroidMovement(i, asteroid) {
-    $asteroidElements = $(".asteroid");
-    asteroid.position[0] += asteroid.velocity[0] * (refreshTime / 40);
-    asteroid.position[1] += asteroid.velocity[1] * (refreshTime / 40);
-    $asteroidElements.eq(i).css({"left": asteroid.position[0] + "px", "top": asteroid.position[1] + "px", "height": asteroid.radius*2, "width": asteroid.radius*2});
+  function asteroidMovement() {
+    for (var i = 0; i < asteroidArray.length; i++) {
+      var asteroid = asteroidArray[i];
+      var $asteroidElements = $(".asteroid");
+      asteroid.position[0] += asteroid.velocity[0] * (refreshTime / 40);
+      asteroid.position[1] += asteroid.velocity[1] * (refreshTime / 40);
+      $asteroidElements.eq(i).css({"left": asteroid.position[0] + "px", "top": asteroid.position[1] + "px", "height": asteroid.radius*2, "width": asteroid.radius*2});
+    }
   }
 
   // Test if the ship has collided with an asteroid
@@ -188,7 +214,7 @@ $(function() {
 
     // Rotate ship coordinates
     var shipPointsRotated = [null, null, null, null];
-    for (var i in shipPoints) {
+    for (var i = 0; i < shipPointsRotated.length; i++) {
       shipPointsRotated[i] = [null, null];
       shipPointsRotated[i][0] = (shipPointsTranslated[i][0] * Math.cos(shipTheta * (Math.PI / 180))) - (shipPointsTranslated[i][1] * Math.sin(shipTheta * (Math.PI / 180)));
       shipPointsRotated[i][1] = (shipPointsTranslated[i][0] * Math.sin(shipTheta * (Math.PI / 180))) + (shipPointsTranslated[i][1] * Math.cos(shipTheta * (Math.PI / 180)));
@@ -196,7 +222,7 @@ $(function() {
 
     // Translate ship coordinates back to actual position
     var shipPointsReTranslated = [null, null, null, null];
-    for (var i = 0; i < 4; i++) {
+    for (var i = 0; i < shipPointsReTranslated.length; i++) {
       shipPointsReTranslated[i] = [null, null];
       shipPointsReTranslated[i][0] = shipPointsRotated[i][0] + shipCenter[0];
       shipPointsReTranslated[i][1] = shipPointsRotated[i][1] + shipCenter[1];
@@ -204,14 +230,14 @@ $(function() {
 
     // Calculate gradients of each ship line
     var shipLineGradients = [null, null, null, null];
-    for (var i in shipLineGradients) {
+    for (var i = 0; i < shipLineGradients.length; i++) {
       i = parseInt(i);
       shipLineGradients[i] = ((shipPointsReTranslated[(i + 1) % 4][1]) - (shipPointsReTranslated[i][1])) / ((shipPointsReTranslated[(i + 1) % 4][0]) - (shipPointsReTranslated[i][0]));
     }
 
     // Calculate constants of each ship line
     var shipLineConstants = [null, null, null, null];
-    for (var i in shipLineConstants) {
+    for (var i = 0; i < shipLineConstants.length; i++) {
       shipLineConstants[i] = shipPointsReTranslated[i][1] - (shipLineGradients[i] * shipPointsReTranslated[i][0]);
     }
 
@@ -222,7 +248,7 @@ $(function() {
       var lr = asteroidArray[i].position[0] + r;
       var tr = - asteroidArray[i].position[1] - r;
 
-      for (var j = 0; j < 1; j++) {
+      for (var j = 0; j < shipLineGradients.length; j++) {
         // More constants
         var j = parseInt(j);
         var m = shipLineGradients[j];
@@ -245,9 +271,35 @@ $(function() {
     }
   }
 
+  function asteroidDespawn() {
+    var newAsteroidArray = [];
+
+    for (var i = 0; i < asteroidArray.length; i++) {
+      var asteroid = asteroidArray[i];
+      var xCoord = asteroid.position[0];
+      var yCoord = asteroid.position[1];
+      var distanceFromCenter = Math.sqrt((xCoord - viewingCircleRadius + asteroid.radius)**2 + (yCoord - viewingCircleRadius + asteroid.radius)**2);
+
+      if (distanceFromCenter <= viewingCircleRadius) {
+        asteroid.enteredCenter = true;
+      }
+
+      if ((distanceFromCenter >= spawnCircleRadius) && asteroid.enteredCenter == true) {
+        $asteroidElements.eq(i).addClass("remove-asteroid");
+      } else {
+        newAsteroidArray.push(asteroidArray[i]);
+      }
+
+    }
+
+    asteroidArray = newAsteroidArray;
+    $(".remove-asteroid").remove();
+    $asteroidElements = $(".asteroid");
+  }
+
   makeAsteroid();
-  makeAsteroid();
-  makeAsteroid();
+  var currentTime = 0;
+  var timeToSpawn = randomValue(asteroidSpawnTime[0], asteroidSpawnTime[1]);
 
   // refresh rate
   setInterval(function() {
@@ -271,12 +323,18 @@ $(function() {
     }
 
     changeShipMovement();
-
-    for (var i in asteroidArray) {
-      asteroidMovement(i, asteroidArray[i]);
-    }
-
+    asteroidMovement();
     asteroidCollision();
+    asteroidDespawn();
+
+
+    if (currentTime > timeToSpawn) {
+      makeAsteroid();
+      currentTime = 0;
+      timeToSpawn = randomValue(asteroidSpawnTime[0], asteroidSpawnTime[1]);
+    } else {
+      currentTime += refreshTime;
+    }
 
 
   }, refreshTime);
