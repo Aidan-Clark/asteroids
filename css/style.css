@@ -1,0 +1,180 @@
+@font-face {
+  font-family: SpaceRanger;
+  src: url('../fonts/space-ranger/spacerangerexpand.ttf');
+}
+
+@font-face {
+  font-family: Digitalix;
+  src: url('../fonts/digitalix/digitalix.ttf');
+}
+
+main {
+  background-image: url('../images/galaxy-background.jpg');
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  background-position: center;
+  margin:0;
+  padding:0;
+}
+
+.top-bar {
+  height: 5px;
+}
+
+.middle-bar {
+  height: 700px;
+  width: 100%;
+  position: relative;
+}
+
+.bottom-bar {
+  height: 400px;
+}
+
+.instructions {
+  display: inline-block;
+  height: 700px;
+  width: 700px;
+  border: 2px solid white;
+  position: absolute;
+  top: 10%;
+  left: 25%;
+  right: 25%;
+  margin: 0px 0px;
+  text-align: center;
+  background-color: black;
+  background-position: center;
+  font-size: 40px;
+  color: white;
+}
+
+.instructions h1 {
+  font-family: SpaceRanger;
+  margin: auto;
+}
+
+.instructions p {
+  margin: 100px 20px;
+  font-family: Digitalix;
+  text-transform: uppercase;
+  font-size: 20px;
+}
+
+.start-button {
+  background-color: #4CAF50; /* Green */
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  margin: auto;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  font-family: Digitalix;
+  text-transform:capitalize;
+}
+
+.instructions-div {
+  margin: 50px 0px;
+}
+
+.screen {
+  height: 700px;
+  width: 700px;
+  border: 2px solid white;
+  position: absolute;
+  top: 10%;
+  left: 25%;
+  right: 25%;
+  margin: 0px 0px;
+  background-color: black;
+  background-position: center;
+  display: none;
+}
+
+.game-over {
+  display: none;
+  height: 700px;
+  width: 700px;
+  border: 2px solid white;
+  position: absolute;
+  top: 10%;
+  left: 25%;
+  right: 25%;
+  margin: 0px 0px;
+  text-align: center;
+  background-color: black;
+  background-position: center;
+  font-size: 40px;
+  color: white;
+}
+
+.game-over h1 {
+  margin-top: 150px;
+  font-family: SpaceRanger;
+  text-transform: uppercase;
+}
+
+.game-over p {
+  margin: 100px 20px;
+  font-family: Digitalix;
+  text-transform: uppercase;
+  font-size: 20px;
+}
+
+.ship {
+  position: relative;
+  left: 335px;
+  top: 335px;
+  transform: rotate(0deg);
+  overflow: visible;
+}
+
+.ship:before {
+content: "";
+position: absolute;
+width: 150%;
+height: 150%;
+overflow: visible;
+top: -30%;
+left: -25%;
+z-index: 1;
+background-image: url('../images/spaceship2.png');
+background-size: cover;
+}
+
+.asteroid {
+  border-radius: 50%;
+  position: absolute;
+  background-image: url('../images/asteroid.jpg');
+  background-position: right
+}
+
+.score {
+  display: none;
+  font-size: 28px;
+  color: white;
+  margin-top: 300px;
+  margin-left: 10px;
+  width: 300px;
+  position: absolute;
+  font-family: Digitalix;
+  background-color: black;
+  padding: 10px;
+  border: 2px solid white;
+  z-index: 1;
+}
+
+.reset-button {
+  background-color: #4CAF50; /* Green */
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  margin: auto;
+  text-align: center;
+  text-decoration: none;
+  display: none;
+  font-size: 16px;
+  font-family: Digitalix;
+}

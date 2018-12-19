@@ -3,53 +3,57 @@
   <head>
     <meta charset="utf-8">
     <title>Asteroids</title>
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="js/main.js"></script>
   </head>
   <body>
-    <div class="container-float">
-      <div class="css-background">
 
-        <!-- Top Bar -->
-        <div class="row top-bar">
-          <div class="col-md-12">
-            <div class="jumbotron">
-              <h1 class="title">Asteroids</h1>
+    <audio class="sound-thrust" src="sounds/ship-thrusters.mp3"></audio>
+    <audio class="sound-turn" src="sounds/escaping-gas.m4a"></audio>
+
+    <main>
+
+      <div class="top-bar"></div>
+
+      <div class="middle-bar">
+
+        <div class="score-div">
+          <h1 class="score">Score:</h1>
+        </div>
+
+        <div class="center-screen">
+
+          <div class="instructions">
+            <div class="instructions-div">
+              <h1>ASTEROIDS</h1>
+              <p>Use the WASD keys to move.</p>
+              <p>Avoid the incoming asteroids.</p>
+              <p>Try to survive as long as possible!</p>
+
+              <button type="button" class="start-button">START</button>
 
             </div>
           </div>
-        </div>
 
-        <!-- Middle Bar -->
-        <div class="row middle-bar">
-          <div class="col-md-3 side"></div>
-
-          <div class="col-md-6 middle">
-            <div class="row">
-              <div class="col-md-2"></div>
-
-              <div class="col-md-8">
-                <a href="pages/asteroids.html" class="btn" role="button">Play</a>
-              </div>
-
-              <div class="col-md-2"></div>
-
-            </div>
+          <div class="screen">
+            <div class="ship"></div>
           </div>
 
-          <div class="col-md-3 side"></div>
-        </div>
-
-        <!-- Bottom Bar -->
-        <div class="row bottom-bar">
-          <div class="col-md-12">
-
+          <div class="game-over">
+            <h1>Game Over</h1>
+            <p>Your Score: </p>
+            <button type="button" class="reset-button">PLAY AGAIN?</button>
           </div>
-        </div>
 
+        </div>
 
 
       </div>
-    </div>
+
+      <div class="bottom-bar"></div>
+
+    </main>
+
   </body>
 </html>

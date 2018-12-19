@@ -1,6 +1,7 @@
 $(function() {
+  // Ship Variables
   var $ship = $(".ship");
-  var shipSize = [30, 50];
+  var shipSize = [30, 67];
   $ship.css({"width": shipSize[0] + "px", "height": shipSize[1] + "px"});
   var baseVelocity = 1;
   var shipVelocity = [null, null]
@@ -9,8 +10,9 @@ $(function() {
   var maxShipVelocity = 10;
   var shipTotalV = null;
   var shipDampening = 0.985;
-  var shipPosition = [null, null]
+  var shipPosition = [null, null];
 
+  // Asteroid Variables
   var asteroidVelocityRange = [6, 12];
   var asteroidRadiusRange = [30, 150];
   var refreshTime = 17;
@@ -18,20 +20,32 @@ $(function() {
   var spawnCircleRadius = 645;
   var asteroidArray = [];
   var $asteroidElements = $(".asteroid");
-
-  var gameOver = false;
-
   var asteroidSpawnTime = [500, 1500];
+
+  // Game variables
+  var gameOver = false;
+  var resetTimes = 0;
+  var gameState = 0;
+
+  // Initial asteroid spawn values
+  var currentTime = 0;
+  var timeToSpawn = 0;
+
+  // Initial score values
+  var scoreWait = 50;
+  var scoreWaitCount = 0;
+  var score = 0;
 
   // Get left: & top: CSS values
   shipPosition[0] = parseFloat($ship.css("left").match(/\d/g).join(""));
   shipPosition[1] = parseFloat($ship.css("top").match(/\d/g).join(""));
 
   // Get Cos(theta) from the transformation matrix
-  var shipTheta = parseFloat($ship.css("transform").split("(")[1].split(")")[0].split(",")[0]);
+  // var shipTheta = parseFloat($ship.css("transform").split("(")[1].split(")")[0].split(",")[0]);
 
   // Convert to theta, then convert from radians to degrees
-  shipTheta = Math.round(Math.acos(shipTheta) * (180/Math.PI))
+  // shipTheta = Math.round(Math.acos(shipTheta) * (180/Math.PI))
+  shipTheta = 0;
 
   // Gives random value between a minimum and maximum
   function randomValue(min, max) {
@@ -94,13 +108,16 @@ $(function() {
       shipVelocity[1] = 0;
     }
 
+    // Generates new Position
     var newShipPosition = [null, null];
     newShipPosition[0] = shipPosition[0] + (shipVelocity[0] * (refreshTime / 40));
     newShipPosition[1] = shipPosition[1] + (shipVelocity[1] * (refreshTime / 40));
 
+
     var deltaX = 0.5 * (  (shipSize[0] * Math.cos(shipTheta * (Math.PI/180)) )  -  (shipSize[1] * Math.sin(shipTheta * (Math.PI/180)) )  );
     var deltaY = 0.5 * (  (shipSize[1] * Math.cos(shipTheta * (Math.PI/180)) )  +  (shipSize[0] * Math.sin(shipTheta * (Math.PI/180)) )  );
 
+    // Checks if new position causes center of ship to move outside the screen.
     if ((0 < (newShipPosition[0] + deltaX) && (newShipPosition[0] - deltaX) < 700) && (0 < (newShipPosition[1] + deltaY) && (newShipPosition[1] - deltaY) < 700)) {
       shipPosition[0] = newShipPosition[0];
       shipPosition[1] = newShipPosition[1];
@@ -113,13 +130,32 @@ $(function() {
 
   }
 
+  function playThrusters() {
+    $(".sound-thrust")[0].play();
+  }
+
+  function pauseThrusters() {
+    $(".sound-thrust")[0].pause();
+  }
+
+  function playGas() {
+    $(".sound-turn")[0].play();
+  }
+
+  function pauseGas() {
+    $(".sound-turn")[0].pause();
+    $(".sound-turn")[0].currentTime = 0;
+  }
+
   // Calculates new velocity for ship
   function changeShipVelocity(direction) {
+    playThrusters();
     var newShipVelocity = [null, null];
     newShipVelocity[0] = shipVelocity[0] + (direction * baseVelocity * Math.sin(shipTheta * (Math.PI/180)));
     newShipVelocity[1] = shipVelocity[1] - (direction * baseVelocity * Math.cos(shipTheta * (Math.PI/180)));
     var newShipTotalV = Math.sqrt((newShipVelocity[0]**2) + (newShipVelocity[1]**2));
 
+    // Increases velocity if max velocity hasn't been reached.
     if (newShipTotalV >= maxShipVelocity) {
       shipVelocity[0] *= maxShipVelocity / shipTotalV;
       shipVelocity[1] *= maxShipVelocity / shipTotalV;
@@ -132,6 +168,7 @@ $(function() {
 
   // Calculates new ship angle
   function changeShipRotation(direction) {
+    playGas();
     shipTheta += direction * 5;
     if (shipTheta < 0) {
       shipTheta += 360;
@@ -154,8 +191,9 @@ $(function() {
 
   // Makes an asteroid
   function makeAsteroid() {
-    var startAngle = Math.floor((Math.random() * 360));
 
+    // Makes variables for random new asteroids
+    var startAngle = Math.floor((Math.random() * 360));
     var velocityAngleMax = startAngle + 90 + (Math.asin(viewingCircleRadius/spawnCircleRadius) * (180/Math.PI));
     var velocityAngleMin = startAngle + 90 - (Math.asin(viewingCircleRadius/spawnCircleRadius) * (180/Math.PI));
     var velocityAngle = randomValue(velocityAngleMin, velocityAngleMax);
@@ -166,17 +204,23 @@ $(function() {
     velocity[1] = velocityTotal * Math.sin(velocityAngle * (Math.PI/180));
 
     var radius = randomValue(asteroidRadiusRange[0], asteroidRadiusRange[1]);
-
     var position = [null, null];
     position[0] = (viewingCircleRadius - radius) + (spawnCircleRadius * Math.sin(startAngle * (Math.PI/180)));
     position[1] = (viewingCircleRadius - radius) - (spawnCircleRadius * Math.cos(startAngle * (Math.PI/180)));
 
+    // Makes new asteroid
     var newAsteroid = new Asteroid(position, velocity, radius, false, 0);
     var $asteroidDiv = $('<div class="asteroid"></div>');
-    $(".screen").append($asteroidDiv);
 
+    $($asteroidDiv).hide().appendTo(".screen").fadeIn(1000);
+
+    // $(".screen").append($asteroidDiv);
     asteroidArray.push(newAsteroid);
     $asteroidElements = $(".asteroids");
+    // $asteroidElements.last().fadeIn();
+
+
+
     $asteroidElements.last().css({"left": newAsteroid.position[0] + "px", "top": newAsteroid.position[1] + "px", "height": radius*2, "width": radius*2});
 
   }
@@ -265,51 +309,36 @@ $(function() {
         var xMinusPos = (- x1Const - Math.sqrt((x1Const**2) - (4 * x2Const * x0Const))) / (2 * x2Const);
 
         // Collision occurs if intersection is between ends of ship lines
-
         if ( (Math.abs(shipPointsReTranslated[j][0] - xMinusPos) > 0.1) || (Math.abs(shipPointsReTranslated[j][0] - xPlusPos) > 0.1) || (Math.abs(shipPointsReTranslated[(j + 1) % 4][0] - xMinusPos) > 0.1) || (Math.abs(shipPointsReTranslated[(j + 1) % 4][0] - xPlusPos) > 0.1) ) {
           if (xMinusPos < shipPointsReTranslated[j][0] && shipPointsReTranslated[j][0] < xPlusPos) {
-            console.log("Scenario1");
-            console.log("xMinusPos: " + xMinusPos);
-            console.log("shipPointsReTranslated[j][0]: " + shipPointsReTranslated[j][0]);
-            console.log("xPlusPos: " + xPlusPos);
             gameOver = true;
           }
 
           if (xMinusPos < shipPointsReTranslated[(j + 1) % 4][0] && shipPointsReTranslated[(j + 1) % 4][0] < xPlusPos) {
-            console.log("Scenario2");
-            console.log("xMinusPos: " + xMinusPos);
-            console.log("shipPointsReTranslated[(j + 1) % 4][0]: " + shipPointsReTranslated[(j + 1) % 4][0]);
-            console.log("xPlusPos: " + xPlusPos);
             gameOver = true;
           }
         }
-
-
       }
     }
   }
 
+  // Despawns asteroid
   function asteroidDespawn() {
     var newAsteroidArray = [];
 
     for (var i = 0; i < asteroidArray.length; i++) {
       var asteroid = asteroidArray[i];
       asteroid.aliveTime++;
-
-      // if (asteroid.aliveTime >= asteroid.deathTime) {
-      //   $asteroidElements.eq(i).addClass("remove-asteroid");
-      // } else {
-      //   newAsteroidArray.push(asteroidArray[i]);
-      // }
-
       var xCoord = asteroid.position[0];
       var yCoord = asteroid.position[1];
       var distanceFromCenter = Math.sqrt((xCoord - viewingCircleRadius + asteroid.radius)**2 + (yCoord - viewingCircleRadius + asteroid.radius)**2);
 
+      // Keeps track if asteroid has entered screen yet
       if (distanceFromCenter <= viewingCircleRadius) {
         asteroid.enteredCenter = true;
       }
 
+      // Despawns asteroid if it exits the screen after entering it, or if it's alive for too long (To fix a bug where they didn't despawn)
       if (((distanceFromCenter >= spawnCircleRadius) && asteroid.enteredCenter == true) || (asteroid.aliveTime >= ((spawnCircleRadius * 6) / asteroidVelocityRange[0])) ) {
         $asteroidElements.eq(i).addClass("remove-asteroid");
       } else {
@@ -318,19 +347,16 @@ $(function() {
 
     }
 
+    // Does the despawning
     asteroidArray = newAsteroidArray;
     $(".remove-asteroid").remove();
     $asteroidElements = $(".asteroid");
   }
 
+
   makeAsteroid();
-  var currentTime = 0;
-  var timeToSpawn = randomValue(asteroidSpawnTime[0], asteroidSpawnTime[1]);
 
-  var scoreWait = 50;
-  var scoreWaitCount = 0;
-  var score = 0;
-
+  // Increases score
   function scoreCounter() {
     if (scoreWaitCount == scoreWait) {
       score += 10;
@@ -339,58 +365,24 @@ $(function() {
       scoreWaitCount++
     }
 
-    // console.log(score);
     $(".score").html("Score: " + score);
 
   }
 
-  var resetTimes = 0;
-
-  function runAsteroids() {
-    if (gameOver == false && resetTimes == 0) {
-      shipVelocity[0] *= shipDampening;
-      shipVelocity[1] *= shipDampening;
-
-      if (wasdKeys[0] == true) {
-        changeShipVelocity(1);
-      }
-
-      if (wasdKeys[1] == true) {
-        changeShipRotation(-1);
-      }
-
-      if (wasdKeys[2] == true) {
-        changeShipVelocity(-1);
-      }
-
-      if (wasdKeys[3] == true) {
-        changeShipRotation(1);
-      }
-
-      changeShipMovement();
-      asteroidMovement();
-      asteroidCollision();
-      asteroidDespawn();
 
 
-      if (currentTime > timeToSpawn) {
-        makeAsteroid();
-        currentTime = 0;
-        timeToSpawn = randomValue(asteroidSpawnTime[0], asteroidSpawnTime[1]);
-      } else {
-        currentTime += refreshTime;
-      }
-
-      scoreCounter();
-
-    } else if (gameOver == true && resetTimes == 0){
-      alert("GAME OVER\n Your Score: " + score);
-      resetTimes = 1;
-    }
+  // Starts the game
+  function startAsteroids() {
+    $(".instructions").css("display", "none");
+    $(".screen").css("display", "inline-block");
+    $(".score").css("display", "block");
+    $(".reset-button").css("display", "block");
+    gameState = 1;
   }
 
-  var refreshInterval = setInterval(runAsteroids, refreshTime);
+  $(".start-button").click(startAsteroids);
 
+  // Resets game on button press
   function resetAsteroids() {
     resetTimes = 0;
     shipVelocity = [null, null]
@@ -405,12 +397,93 @@ $(function() {
     $ship.css({"left": "335px", "top": "335px"});
     scoreWaitCount = 0;
     score = 0;
+    var wasdKeys = [false, false, false, false];
+    gameState = 0;
+
+    $(".instructions").css("display", "block");
+    $(".game-over").css("display", "none");
+    $(".score").css("display", "none");
+    $(".reset-button").css("display", "none");
+    $(".start-button").css("display", "block");
+    gameState = 0;
   }
 
   $(".reset-button").click(resetAsteroids);
 
+  function gameFinished() {
+    gameState = 2;
+    $(".screen").css("display", "none");
+    $(".score").css("display", "none");
+    $(".reset-button").css("display", "block");
+    $(".game-over").css("display", "inline-block");
+    $(".game-over p").html("Your Score: " + score);
+    pauseGas();
+    pauseThrusters();
+  }
 
+  // Runs the game
+  function runAsteroids() {
+    if (gameState == 1) {
+      if (gameOver == false && resetTimes == 0) {
+        // Applies slowdown
+        shipVelocity[0] *= shipDampening;
+        shipVelocity[1] *= shipDampening;
 
+        // Increases velocity/changes rotation on keypress
+        if (wasdKeys[0] == true) {
+          changeShipVelocity(1);
+        }
 
+        if (wasdKeys[1] == true) {
+          changeShipRotation(-1);
+        }
+
+        if (wasdKeys[2] == true) {
+          changeShipVelocity(-1);
+        }
+
+        if (wasdKeys[3] == true) {
+          changeShipRotation(1);
+        }
+
+        if (wasdKeys[0] == false && wasdKeys[2] == false) {
+          pauseThrusters();
+        }
+
+        if (wasdKeys[1] == false && wasdKeys[3] == false) {
+          pauseGas();
+        }
+
+        // Moves ships & asteroid, asteroid collision, asteroid despawn
+        changeShipMovement();
+        asteroidMovement();
+        asteroidCollision();
+        asteroidDespawn();
+
+        // Makes new asteroid after random time
+        if (currentTime > timeToSpawn) {
+          makeAsteroid();
+          currentTime = 0;
+          timeToSpawn = randomValue(asteroidSpawnTime[0], asteroidSpawnTime[1]);
+        } else {
+          currentTime += refreshTime;
+        }
+
+        // Increases score
+        scoreCounter();
+
+        // On Collision, game over
+      } else if (gameOver == true && resetTimes == 0){
+        gameFinished();
+        $(".score").html("GAME OVER. Your Score: " + score);
+        resetTimes = 1;
+        gameState = 2;
+      }
+
+      // The setInterval that runs the game
+    }
+  }
+
+  var refreshInterval = setInterval(runAsteroids, refreshTime);
 
 });
