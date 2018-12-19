@@ -1,0 +1,79 @@
+main {
+  background-image: url('../images/galaxy-background.jpg');
+  height: 100%;
+  width: 100%;
+  background-position: center;
+}
+
+.top-bar {
+  height: 5px;
+}
+
+.middle-bar {
+  height: 700px;
+  width: 100%
+  position: relative;
+}
+
+.bottom-bar {
+  height: 400px;
+}
+
+.screen {
+  display: inline-block;
+  height: 700px;
+  width: 700px;
+  border: 2px solid white;
+  position: absolute;
+  top: 10%;
+  left: 25%;
+  right: 25%;
+  margin: 0px 0px;
+  margin-bottom: 0px;
+  background-color: black;
+  background-position: center;
+}
+
+.ship {
+  position: relative;
+  left: 335px;
+  top: 335px;
+  transform: rotate(0deg);
+  overflow: visible;
+}
+
+.ship:before {
+content: "";
+position: absolute;
+width: 200%;
+height: 200%;
+overflow: visible;
+top: -50%;
+left: -50%;
+z-index: 1;
+background-image: url('../images/spaceship.png');
+background-size: cover;
+}
+
+.asteroid {
+  border-radius: 50%;
+  position: absolute;
+  background-image: url('../images/asteroid.jpg');
+  background-position: right
+}
+
+.score {
+  font-size: 30px;
+  color: white;
+}
+
+.reset-button {
+  background-color: #4CAF50; /* Green */
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+}

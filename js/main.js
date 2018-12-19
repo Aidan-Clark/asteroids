@@ -327,8 +327,8 @@ $(function() {
   var currentTime = 0;
   var timeToSpawn = randomValue(asteroidSpawnTime[0], asteroidSpawnTime[1]);
 
-  var scoreWait = 50
-  var scoreWaitCount = 0
+  var scoreWait = 50;
+  var scoreWaitCount = 0;
   var score = 0;
 
   function scoreCounter() {
@@ -344,9 +344,10 @@ $(function() {
 
   }
 
-  // refresh rate
-  var refreshInterval = setInterval(function() {
-    if (gameOver == false) {
+  var resetTimes = 0;
+
+  function runAsteroids() {
+    if (gameOver == false && resetTimes == 0) {
       shipVelocity[0] *= shipDampening;
       shipVelocity[1] *= shipDampening;
 
@@ -382,14 +383,31 @@ $(function() {
 
       scoreCounter();
 
-    } else {
+    } else if (gameOver == true && resetTimes == 0){
       alert("GAME OVER\n Your Score: " + score);
-      clearInterval(refreshInterval);
+      resetTimes = 1;
     }
+  }
 
-  }, refreshTime);
+  var refreshInterval = setInterval(runAsteroids, refreshTime);
 
+  function resetAsteroids() {
+    resetTimes = 0;
+    shipVelocity = [null, null]
+    asteroidArray = [];
+    gameOver = false;
+    shipTotalV = null;
+    shipPosition = [335, 335]
+    $(".asteroid").remove();
+    $asteroidElements = $(".asteroid");
+    shipTheta = 0;
+    $ship.css("transform", "rotate(" + shipTheta + "deg)");
+    $ship.css({"left": "335px", "top": "335px"});
+    scoreWaitCount = 0;
+    score = 0;
+  }
 
+  $(".reset-button").click(resetAsteroids);
 
 
 

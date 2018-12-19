@@ -1,0 +1,32 @@
+.top-bar {
+  background-color: black;
+  height: 230px;
+  color: white;
+}
+
+.title {
+  margin: auto;
+  text-align: center;
+
+}
+
+.jumbotron {
+  background-color: rgba(0, 0, 0, 0);
+  padding-bottom: 0px;
+  margin-bottom: 0px;
+  font-size: 70px;
+}
+
+.jumbotron h1 {
+  font-size: 100px;
+}
+
+.side {
+  background-color: black;
+  height: 600px;
+}
+
+.bottom-bar {
+  background-color: black;
+  height: 150px;
+}
