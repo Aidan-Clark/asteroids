@@ -14,8 +14,8 @@ main {
   width: 100%;
   box-sizing: border-box;
   background-position: center;
-  margin:0;
-  padding:0;
+  margin: 0px;
+  padding: 0px;
 }
 
 .top-bar {
@@ -55,14 +55,14 @@ main {
 }
 
 .instructions p {
-  margin: 100px 20px;
+  margin: 80px 20px;
   font-family: Digitalix;
   text-transform: uppercase;
   font-size: 20px;
 }
 
 .start-button {
-  background-color: #4CAF50; /* Green */
+  background-color: #4CAF50;
   border: none;
   color: white;
   padding: 15px 32px;
@@ -72,7 +72,7 @@ main {
   display: inline-block;
   font-size: 16px;
   font-family: Digitalix;
-  text-transform:capitalize;
+  text-transform: capitalize;
 }
 
 .instructions-div {
@@ -132,7 +132,7 @@ overflow: visible;
 top: -30%;
 left: -25%;
 z-index: 1;
-background-image: url('../images/spaceship2.png');
+background-image: url('../images/spaceship.png');
 background-size: cover;
 }
 
@@ -142,7 +142,6 @@ background-size: cover;
   top: 335px;
   transform: rotate(0deg);
   overflow: visible;
-  /* background-color: red; */
 }
 
 .asteroid {
@@ -159,9 +158,8 @@ background-size: cover;
   top: 335px;
   transform: rotate(0deg);
   overflow: visible;
-  /* background-color: blue; */
-  width: 7px;
-  height: 21px;
+  width: 10px;
+  height: 30px;
   background-image: url('../images/laser.png');
   background-size: cover;
 
@@ -183,7 +181,7 @@ background-size: cover;
 }
 
 .reset-button {
-  background-color: #4CAF50; /* Green */
+  background-color: #4CAF50;
   border: none;
   color: white;
   padding: 15px 32px;

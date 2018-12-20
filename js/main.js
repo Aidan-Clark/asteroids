@@ -42,21 +42,20 @@ $(function() {
     currentTime = 0;
     timeToSpawn = 0;
 
-    // Initial score values
-    scoreWait = 50;
-    scoreWaitCount = 0;
+    // Initial score value
     score = 0;
+    $(".score").html("Score: " + score);
   }
   setGameVariables();
 
-  // Shoot values
+  // Beam values
   function setBeamVariables() {
     spacebar = false;
     beamInterval = 25;
     beamTimer = 0;
     beamDespawnTime = 40;
     beamVelocity = 15;
-    beamSize = [7, 21];
+    beamSize = [10, 30];
     beamArray = [];
     $beamElements = $(".beam");
   }
@@ -68,14 +67,17 @@ $(function() {
     return output;
   }
 
+  // Calculates sine of an angle in degrees
   function sinDeg(angle) {
     return Math.sin(angle * (Math.PI / 180));
   }
 
+  // Calculates cosine of an angle in degrees
   function cosDeg(angle) {
     return Math.cos(angle * (Math.PI / 180));
   }
 
+  // Calculates the hypotenuse of a triangle of sides a & b
   function pythagoras(a, b) {
     return Math.sqrt(a**2 + b**2);
   }
@@ -180,7 +182,7 @@ $(function() {
 
   function pauseGas() {
     $(".sound-turn")[0].pause();
-    $(".sound-turn")[0].currentTime = 0;
+    $(".sound-turn")[0].currentTime = 2000;
   }
 
   // Calculates new velocity for ship
@@ -225,6 +227,7 @@ $(function() {
     this.aliveTime = aliveTime;
   }
 
+  // Laser beam constructor function
   var Beam = function(position, velocity, aliveTime, theta) {
     this.position = position;
     this.velocity = velocity;
@@ -232,6 +235,7 @@ $(function() {
     this.theta = theta;
   }
 
+  // Makes a laser beam
   function makeBeam() {
     var velocity = [null, null];
     var beamTheta = shipTheta;
@@ -252,6 +256,7 @@ $(function() {
     $beamElements.last().css({"left": newBeam.position[0] + "px", "top": newBeam.position[1] + "px", "height": beamSize[1], "width": beamSize[0], "transform": "rotate(" + beamTheta + "deg)"});
   }
 
+  // Determines when to make a laser beam
   function fireBeam() {
     // console.log(beamTimer);
     if (beamTimer == 0) {
@@ -286,14 +291,8 @@ $(function() {
     var $asteroidDiv = $('<div class="asteroid"></div>');
 
     $($asteroidDiv).hide().appendTo(".screen").fadeIn(1000);
-
-    // $(".screen").append($asteroidDiv);
     asteroidArray.push(newAsteroid);
     $asteroidElements = $(".asteroid");
-    // $asteroidElements.last().fadeIn();
-
-
-
     $asteroidElements.last().css({"left": newAsteroid.position[0] + "px", "top": newAsteroid.position[1] + "px", "height": radius*2, "width": radius*2});
 
   }
@@ -309,6 +308,7 @@ $(function() {
     }
   }
 
+  // Moves laser beam based on velocity
   function beamMovement() {
     for (var i = 0; i < beamArray.length; i++) {
       var beam = beamArray[i];
@@ -319,6 +319,7 @@ $(function() {
     }
   }
 
+  // Finds the 4 corner coordinates of a rectangle of known position and size
   function initialRectanglePoints(position, size) {
     var points = new Array(4);
     points[0] = [position[0], position[1]];
@@ -329,6 +330,7 @@ $(function() {
     return points;
   }
 
+ // Centres these points around the origin
   function centreOnOrigin(points, center) {
     var pointsCentered = new Array(points.length);
     for (var i = 0; i < points.length; i++) {
@@ -340,6 +342,7 @@ $(function() {
     return pointsCentered;
   }
 
+ // Rotates these points around the origin
   function rotateAroundOrigin(points, angle) {
     var pointsRotated = new Array(points.length);
     for (var i = 0; i < points.length; i++) {
@@ -351,6 +354,7 @@ $(function() {
     return pointsRotated;
   }
 
+  // Calculates the gradients between points
   function calculateGradients(points) {
     var gradients = new Array(points.length);
     for (var i = 0; i < points.length; i++) {
@@ -368,6 +372,7 @@ $(function() {
     return gradients;
   }
 
+  // Calculates the constant in the equation of a line
   function calculateConstants(points, gradients) {
     var constants = new Array(points.length);
     for (var i = 0; i < constants.length; i++) {
@@ -377,6 +382,7 @@ $(function() {
     return constants;
   }
 
+  // Calculates if circle i intersects with line j
   function calculateIntersections(gradients, constants, circles, i, j) {
     var r = circles[i].radius;
     var lr = circles[i].position[0] + r;
@@ -390,6 +396,25 @@ $(function() {
     var xPlusPos = (- x1Const + Math.sqrt((x1Const**2) - (4 * x2Const * x0Const))) / (2 * x2Const);
     var xMinusPos = (- x1Const - Math.sqrt((x1Const**2) - (4 * x2Const * x0Const))) / (2 * x2Const);
     return [xMinusPos, xPlusPos];
+  }
+
+  function intersectBetweenPoints(lineEnds, intersectPos, i) {
+    if (
+      (
+        (Math.abs(lineEnds[i][0] - intersectPos[0]) > 0.1) ||
+        (Math.abs(lineEnds[i][0] - intersectPos[1]) > 0.1) ||
+        (Math.abs(lineEnds[(i + 1) % 4][0] - intersectPos[0]) > 0.1) ||
+        (Math.abs(lineEnds[(i + 1) % 4][0] - intersectPos[1]) > 0.1)
+      ) && (
+        (intersectPos[0] < lineEnds[i][0] && lineEnds[i][0] < intersectPos[1]) ||
+        (intersectPos[0] < lineEnds[(i + 1) % 4][0] && lineEnds[(i + 1) % 4][0] < intersectPos[1])
+      )
+    ) {
+      return true;
+
+    } else {
+      return false;
+    }
   }
 
   // Test if the ship has collided with an asteroid
@@ -425,18 +450,7 @@ $(function() {
 
         var xIntersectPos = calculateIntersections(shipLineGradients, shipLineConstants, asteroidArray, i, j);
 
-        // Collision occurs if intersection is between ends of ship lines
-        if (
-          (
-            (Math.abs(shipPointsUnCentered[j][0] - xIntersectPos[0]) > 0.1) ||
-            (Math.abs(shipPointsUnCentered[j][0] - xIntersectPos[1]) > 0.1) ||
-            (Math.abs(shipPointsUnCentered[(j + 1) % 4][0] - xIntersectPos[0]) > 0.1) ||
-            (Math.abs(shipPointsUnCentered[(j + 1) % 4][0] - xIntersectPos[1]) > 0.1)
-          ) && (
-            (xIntersectPos[0] < shipPointsUnCentered[j][0] && shipPointsUnCentered[j][0] < xIntersectPos[1]) ||
-            (xIntersectPos[0] < shipPointsUnCentered[(j + 1) % 4][0] && shipPointsUnCentered[(j + 1) % 4][0] < xIntersectPos[1])
-          )
-        ) {
+        if(intersectBetweenPoints(shipPointsUnCentered, xIntersectPos, j)) {
           gameOver = true;
         }
       }
@@ -472,6 +486,7 @@ $(function() {
       // Calculate gradients of each beam line
       var beamLineGradients = calculateGradients(beamPointsUnCentered);
 
+      // Calculates constants of each beam line
       var beamLineConstants = calculateConstants(beamPointsUnCentered, beamLineGradients);
 
       // Calculates if ship lines and asteroid circle intersect
@@ -482,13 +497,11 @@ $(function() {
           var xIntersectPos = calculateIntersections(beamLineGradients, beamLineConstants, asteroidArray, j, k);
 
           // Collision occurs if intersection is between ends of beam lines
-          if (
-            (xIntersectPos[0] < beamPointsUnCentered[k][0] && beamPointsUnCentered[k][0] < xIntersectPos[1])  ||
-            (xIntersectPos[0] < beamPointsUnCentered[(k + 1) % 4][0] && beamPointsUnCentered[(k + 1) % 4][0] < xIntersectPos[1])
-          ) {
+          if (intersectBetweenPoints(beamPointsUnCentered, xIntersectPos, k)) {
 
             if (asteroidShot == false) {
               score += 10;
+              $(".score").html("Score: " + score);
               asteroidShot = true;
             }
 
@@ -505,6 +518,7 @@ $(function() {
     var newBeamArray = [];
     var newAsteroidArray = [];
 
+    // Creates a new array of beam elements excluding beams that collided
     for (var i = 0; i < beamArray.length; i++) {
       var putIntoArray = true;
 
@@ -519,6 +533,7 @@ $(function() {
       }
     }
 
+    // Creates a new array of asteroid elements excluding asteroids that were destroyed
     for (var i = 0; i < asteroidArray.length; i++) {
       var putIntoArray = true;
 
@@ -573,6 +588,7 @@ $(function() {
     $asteroidElements = $(".asteroid");
   }
 
+  // Despawns asteroid
   function beamDespawn() {
     var newBeamArray = [];
 
@@ -590,19 +606,6 @@ $(function() {
     beamArray = newBeamArray;
     $(".remove-beam").remove();
     $beamElements = $(".beam");
-  }
-
-  // Increases score
-  function scoreCounter() {
-    if (scoreWaitCount == scoreWait) {
-      score += 0;
-      scoreWaitCount = 0;
-    } else {
-      scoreWaitCount++
-    }
-
-    $(".score").html("Score: " + score);
-
   }
 
   // Starts the game
@@ -628,12 +631,12 @@ $(function() {
     $(".asteroid").remove();
     $asteroidElements = $(".asteroid");
     $(".beam").remove();
-    $asteroidElements = $(".beam");
+    $beamElements = $(".beam");
     shipTheta = 0;
     $ship.css("transform", "rotate(" + shipTheta + "deg)");
     $ship.css({"left": "335px", "top": "335px"});
-    scoreWaitCount = 0;
     score = 0;
+    $(".score").html("Score: " + score);
     var wasdKeys = [false, false, false, false];
     gameState = 0;
 
@@ -647,6 +650,7 @@ $(function() {
 
   $(".reset-button").click(resetAsteroids);
 
+  // Shows game over screen
   function gameFinished() {
     gameState = 2;
     $(".screen").css("display", "none");
@@ -703,7 +707,6 @@ $(function() {
         asteroidMovement();
         asteroidCollision();
         asteroidDespawn();
-        // firePositionMovement();
 
         // Makes new asteroid after random time
         if (currentTime > timeToSpawn) {
@@ -714,21 +717,16 @@ $(function() {
           currentTime += refreshTime;
         }
 
-        // Increases score
-        scoreCounter();
-
         // On Collision, game over
       } else if (gameOver == true && resetTimes == 0){
         gameFinished();
-        $(".score").html("GAME OVER. Your Score: " + score);
         resetTimes = 1;
         gameState = 2;
       }
-
-      // The setInterval that runs the game
     }
   }
 
+  // The setInterval that runs the game
   var refreshInterval = setInterval(runAsteroids, refreshTime);
 
 });
