@@ -20,14 +20,14 @@ $(function() {
 
   // Asteroid Variables
   function setAsteroidVariables() {
-    asteroidVelocityRange = [6, 12];
+    asteroidVelocityRange = [8, 13];
     asteroidRadiusRange = [30, 150];
     refreshTime = 17;
     viewingCircleRadius = 350;
     spawnCircleRadius = 645;
     asteroidArray = [];
     $asteroidElements = $(".asteroid");
-    asteroidSpawnTime = [500, 1500];
+    asteroidSpawnTime = [500, 1000];
   }
   setAsteroidVariables();
 
@@ -176,14 +176,48 @@ $(function() {
     $(".sound-thrust")[0].pause();
   }
 
-  function playGas() {
-    $(".sound-turn")[0].play();
+  function playBeam() {
+    pauseBeam();
+    $(".sound-beam")[0].volume = 0.7;
+    $(".sound-beam")[0].play();
   }
 
-  function pauseGas() {
-    $(".sound-turn")[0].pause();
-    $(".sound-turn")[0].currentTime = 2000;
+  function pauseBeam() {
+    $(".sound-beam")[0].pause();
+    $(".sound-beam")[0].currentTime = 0;
   }
+
+  function playGameOver() {
+    pauseGameOver();
+    $(".sound-gameover")[0].play();
+  }
+
+  function pauseGameOver() {
+    $(".sound-gameover")[0].pause();
+    $(".sound-gameover")[0].currentTime = 0;
+  }
+
+  function playButtonClick() {
+    pauseButtonClick();
+    $(".sound-buttonclick")[0].play();
+  }
+
+  function pauseButtonClick() {
+    $(".sound-buttonclick")[0].pause();
+    $(".sound-buttonclick")[0].currentTime = 0;
+  }
+
+  function playAsteroidHit() {
+    pauseAsteroidHit();
+    $(".sound-asteroidhit")[0].volume = 0.7;
+    $(".sound-asteroidhit")[0].play();
+  }
+
+  function pauseAsteroidHit() {
+    $(".sound-asteroidhit")[0].pause();
+    $(".sound-asteroidhit")[0].currentTime = 0;
+  }
+
 
   // Calculates new velocity for ship
   function changeShipVelocity(direction) {
@@ -206,7 +240,6 @@ $(function() {
 
   // Calculates new ship angle
   function changeShipRotation(direction) {
-    playGas();
     shipTheta += direction * 5;
     if (shipTheta < 0) {
       shipTheta += 360;
@@ -261,6 +294,7 @@ $(function() {
     // console.log(beamTimer);
     if (beamTimer == 0) {
       makeBeam();
+      playBeam();
       beamTimer = beamInterval;
     } else {
       beamTimer--;
@@ -290,7 +324,7 @@ $(function() {
     var newAsteroid = new Asteroid(position, velocity, radius, false, 0);
     var $asteroidDiv = $('<div class="asteroid"></div>');
 
-    $($asteroidDiv).hide().appendTo(".screen").fadeIn(1000);
+    $($asteroidDiv).hide().appendTo(".screen").fadeIn(500);
     asteroidArray.push(newAsteroid);
     $asteroidElements = $(".asteroid");
     $asteroidElements.last().css({"left": newAsteroid.position[0] + "px", "top": newAsteroid.position[1] + "px", "height": radius*2, "width": radius*2});
@@ -502,6 +536,7 @@ $(function() {
             if (asteroidShot == false) {
               score += 10;
               $(".score").html("Score: " + score);
+              playAsteroidHit();
               asteroidShot = true;
             }
 
@@ -610,6 +645,7 @@ $(function() {
 
   // Starts the game
   function startAsteroids() {
+    playButtonClick();
     $(".instructions").css("display", "none");
     $(".screen").css("display", "inline-block");
     $(".score").css("display", "block");
@@ -621,6 +657,7 @@ $(function() {
 
   // Resets game on button press
   function resetAsteroids() {
+    playButtonClick();
     resetTimes = 0;
     shipVelocity = [null, null]
     asteroidArray = [];
@@ -658,8 +695,8 @@ $(function() {
     $(".reset-button").css("display", "block");
     $(".game-over").css("display", "inline-block");
     $(".game-over p").html("Your Score: " + score);
-    pauseGas();
     pauseThrusters();
+    playGameOver();
   }
 
   // Runs the game
@@ -689,10 +726,6 @@ $(function() {
 
         if (wasdKeys[0] == false && wasdKeys[2] == false) {
           pauseThrusters();
-        }
-
-        if (wasdKeys[1] == false && wasdKeys[3] == false) {
-          pauseGas();
         }
 
         if (spacebar == true) {
