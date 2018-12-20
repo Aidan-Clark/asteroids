@@ -1,61 +1,66 @@
 $(function() {
+
   // Ship Variables
-  var $ship = $(".ship");
-  var shipSize = [30, 67];
-  $ship.css({"width": shipSize[0] + "px", "height": shipSize[1] + "px"});
-  var baseVelocity = 1;
-  var shipVelocity = [null, null]
-  var wasdKeys = [false, false, false, false];
-  var refreshTime = 20;
-  var maxShipVelocity = 10;
-  var shipTotalV = null;
-  var shipDampening = 0.985;
-  var shipPosition = [null, null];
+  function setShipVariables() {
+    $ship = $(".ship");
+    shipSize = [30, 67];
+    $ship.css({"width": shipSize[0] + "px", "height": shipSize[1] + "px"});
+    baseVelocity = 1;
+    shipVelocity = [null, null]
+    wasdKeys = [false, false, false, false];
+    refreshTime = 20;
+    maxShipVelocity = 10;
+    shipTotalV = null;
+    shipDampening = 0.985;
+    initialShipPosition = [335, 335];
+    shipPosition = initialShipPosition;
+    shipTheta = 0;
+  }
+  setShipVariables();
 
   // Asteroid Variables
-  var asteroidVelocityRange = [6, 12];
-  var asteroidRadiusRange = [30, 150];
-  var refreshTime = 17;
-  var viewingCircleRadius = 350;
-  var spawnCircleRadius = 645;
-  var asteroidArray = [];
-  var $asteroidElements = $(".asteroid");
-  var asteroidSpawnTime = [500, 1500];
+  function setAsteroidVariables() {
+    asteroidVelocityRange = [6, 12];
+    asteroidRadiusRange = [30, 150];
+    refreshTime = 17;
+    viewingCircleRadius = 350;
+    spawnCircleRadius = 645;
+    asteroidArray = [];
+    $asteroidElements = $(".asteroid");
+    asteroidSpawnTime = [500, 1500];
+  }
+  setAsteroidVariables();
+
 
   // Game variables
-  var gameOver = false;
-  var resetTimes = 0;
-  var gameState = 0;
+  function setGameVariables() {
+    gameOver = false;
+    resetTimes = 0;
+    gameState = 0;
 
-  // Initial asteroid spawn values
-  var currentTime = 0;
-  var timeToSpawn = 0;
+    // Initial asteroid spawn values
+    currentTime = 0;
+    timeToSpawn = 0;
 
-  // Initial score values
-  var scoreWait = 50;
-  var scoreWaitCount = 0;
-  var score = 0;
+    // Initial score values
+    scoreWait = 50;
+    scoreWaitCount = 0;
+    score = 0;
+  }
+  setGameVariables();
 
   // Shoot values
-  var spacebar = false;
-  var beamInterval = 25;
-  var beamTimer = 0;
-  var beamDespawnTime = 40;
-  var beamVelocity = 15;
-  var beamSize = [5, 10];
-  var beamArray = [];
-  var $beamElements = $(".beam");
-
-  // Get left: & top: CSS values
-  shipPosition[0] = parseFloat($ship.css("left").match(/\d/g).join(""));
-  shipPosition[1] = parseFloat($ship.css("top").match(/\d/g).join(""));
-
-  // Get Cos(theta) from the transformation matrix
-  // var shipTheta = parseFloat($ship.css("transform").split("(")[1].split(")")[0].split(",")[0]);
-
-  // Convert to theta, then convert from radians to degrees
-  // shipTheta = Math.round(Math.acos(shipTheta) * (180/Math.PI))
-  shipTheta = 0;
+  function setBeamVariables() {
+    spacebar = false;
+    beamInterval = 25;
+    beamTimer = 0;
+    beamDespawnTime = 40;
+    beamVelocity = 15;
+    beamSize = [7, 21];
+    beamArray = [];
+    $beamElements = $(".beam");
+  }
+  setBeamVariables();
 
   // Gives random value between a minimum and maximum
   function randomValue(min, max) {
@@ -220,29 +225,31 @@ $(function() {
     this.aliveTime = aliveTime;
   }
 
-  var Beam = function(position, velocity, aliveTime) {
+  var Beam = function(position, velocity, aliveTime, theta) {
     this.position = position;
     this.velocity = velocity;
     this.aliveTime = aliveTime;
+    this.theta = theta;
   }
 
   function makeBeam() {
     var velocity = [null, null];
-    velocity[0] = beamVelocity * cosDeg(shipTheta - 90);
-    velocity[1] = beamVelocity * sinDeg(shipTheta - 90);
+    var beamTheta = shipTheta;
+    velocity[0] = beamVelocity * cosDeg(beamTheta - 90);
+    velocity[1] = beamVelocity * sinDeg(beamTheta - 90);
 
     var position = [null, null];
-    position[0] = shipPosition[0] + (0.5 * shipSize[0]) + (0.5 * shipSize[1] * sinDeg(shipTheta)) + (0.5 * beamSize[1] * sinDeg(shipTheta)) - (0.5 * beamSize[0]);
+    position[0] = shipPosition[0] + (0.5 * shipSize[0]) + (0.5 * shipSize[1] * sinDeg(beamTheta)) + (0.5 * beamSize[1] * sinDeg(beamTheta)) - (0.5 * beamSize[0]);
 
-    position[1] = shipPosition[1] + (0.5 * shipSize[1]) - (0.5 * shipSize[1] * cosDeg(shipTheta)) - (0.5 * beamSize[1] * cosDeg(shipTheta)) - (0.5 * beamSize[1]);
+    position[1] = shipPosition[1] + (0.5 * shipSize[1]) - (0.5 * shipSize[1] * cosDeg(beamTheta)) - (0.5 * beamSize[1] * cosDeg(beamTheta)) - (0.5 * beamSize[1]);
 
-    var newBeam = new Beam(position, velocity, 0);
+    var newBeam = new Beam(position, velocity, 0, beamTheta);
     var $beamDiv = $('<div class="beam"></div>');
 
     $(".screen").append($beamDiv);
     beamArray.push(newBeam);
     $beamElements = $(".beam");
-    $beamElements.last().css({"left": newBeam.position[0] + "px", "top": newBeam.position[1] + "px", "height": beamSize[1], "width": beamSize[0], "transform": "rotate(" + shipTheta + "deg)"});
+    $beamElements.last().css({"left": newBeam.position[0] + "px", "top": newBeam.position[1] + "px", "height": beamSize[1], "width": beamSize[0], "transform": "rotate(" + beamTheta + "deg)"});
   }
 
   function fireBeam() {
@@ -312,106 +319,227 @@ $(function() {
     }
   }
 
-  // function firePositionMovement() {
-  //   var position = [null, null];
-  //   // position[0] = shipPosition[0] + (0.5 * shipSize[0] * cosDeg(shipTheta)) + (0.5 * beamSize[1] * sinDeg(shipTheta)) - (0.5 * beamSize[0]);
-  //   //
-  //   // position[1] = shipPosition[1] + (0.5 * shipSize[0] * sinDeg(shipTheta)) - (0.5 * beamSize[1] * cosDeg(shipTheta)) - (0.5 * beamSize[1]);
-  //
-  //   position[0] = shipPosition[0] + (0.5 * shipSize[0]) + (0.5 * shipSize[1] * sinDeg(shipTheta)) + (beamSize[1] * sinDeg(shipTheta)) - (0.5 * beamSize[0] * cosDeg(shipTheta));
-  //
-  //   position[1] = shipPosition[1] + (0.5 * shipSize[1]) - (0.5 * shipSize[1] * cosDeg(shipTheta)) - (beamSize[1] * cosDeg(shipTheta)) - (0.5 * beamSize[0] * sinDeg(shipTheta));
-  //
-  //   var $fireElements = $(".fire-position");
-  //   $fireElements.eq(0).css({"left": position[0] + "px", "top": position[1] + "px", "height": "2px", "width": "2px"});
-  // }
+  function initialRectanglePoints(position, size) {
+    var points = new Array(4);
+    points[0] = [position[0], position[1]];
+    points[1] = [position[0], position[1] + size[1]];
+    points[2] = [position[0] + size[0], position[1]];
+    points[3] = [position[0] + size[0], position[1] + size[1]];
 
+    return points;
+  }
 
+  function centreOnOrigin(points, center) {
+    var pointsCentered = new Array(points.length);
+    for (var i = 0; i < points.length; i++) {
+      pointsCentered[i] = [null, null];
+      pointsCentered[i][0] = points[i][0] - center[0];
+      pointsCentered[i][1] = points[i][1] - center[1];
+    }
+
+    return pointsCentered;
+  }
+
+  function rotateAroundOrigin(points, angle) {
+    var pointsRotated = new Array(points.length);
+    for (var i = 0; i < points.length; i++) {
+      pointsRotated[i] = [null, null];
+      pointsRotated[i][0] = (points[i][0] * cosDeg(angle)) - (points[i][1] * sinDeg(angle));
+      pointsRotated[i][1] = (points[i][0] * sinDeg(angle)) + (points[i][1] * cosDeg(angle));
+    }
+
+    return pointsRotated;
+  }
+
+  function calculateGradients(points) {
+    var gradients = new Array(points.length);
+    for (var i = 0; i < points.length; i++) {
+      i = parseInt(i);
+      gradients[i] = ((points[(i + 1) % 4][1]) - (points[i][1])) / ((points[(i + 1) % 4][0]) - (points[i][0]));
+
+      if (gradients[i] == "Infinity") {
+        gradients[i] = 1000000;
+      }
+      if (gradients[i] == "-Infinity") {
+        gradients[i] = -1000000;
+      }
+    }
+
+    return gradients;
+  }
+
+  function calculateConstants(points, gradients) {
+    var constants = new Array(points.length);
+    for (var i = 0; i < constants.length; i++) {
+      constants[i] = points[i][1] - (gradients[i] * points[i][0]);
+    }
+
+    return constants;
+  }
+
+  function calculateIntersections(gradients, constants, circles, i, j) {
+    var r = circles[i].radius;
+    var lr = circles[i].position[0] + r;
+    var tr = - circles[i].position[1] - r;
+    var j = parseInt(j);
+    var m = gradients[j];
+    var c = constants[j];
+    var x2Const = (m**2) + 1;
+    var x1Const = 2 * ((m * c) + (m * tr) - lr);
+    var x0Const = (lr**2) + (c**2) + (tr**2) - (r**2) + (2 * c * tr);
+    var xPlusPos = (- x1Const + Math.sqrt((x1Const**2) - (4 * x2Const * x0Const))) / (2 * x2Const);
+    var xMinusPos = (- x1Const - Math.sqrt((x1Const**2) - (4 * x2Const * x0Const))) / (2 * x2Const);
+    return [xMinusPos, xPlusPos];
+  }
 
   // Test if the ship has collided with an asteroid
   function asteroidCollision() {
     // Get coordinates of ship rectangle
-    var shipPoints = [null, null, null, null]
-    shipPoints[0] = [shipPosition[0], shipPosition[1]];
-    shipPoints[1] = [shipPosition[0], shipPosition[1] + shipSize[1]];
-    shipPoints[2] = [shipPosition[0] + shipSize[0], shipPosition[1]];
-    shipPoints[3] = [shipPosition[0] + shipSize[0], shipPosition[1] + shipSize[1]];
+    var shipPoints = initialRectanglePoints(shipPosition, shipSize);
 
     // Get coordinates of center of ship
     var shipCenter = [null, null];
     shipCenter[0] = shipPosition[0] + (0.5 * shipSize[0]);
     shipCenter[1] = shipPosition[1] + (0.5 * shipSize[1]);
 
-    // Translate ship coordinates to be centered on origin
-    var shipPointsTranslated = [null, null, null, null];
-    for (i in shipPointsTranslated) {
-      shipPointsTranslated[i] = [null, null];
-      shipPointsTranslated[i][0] = shipPoints[i][0] - shipCenter[0];
-      shipPointsTranslated[i][1] = shipPoints[i][1] - shipCenter[1];
-    }
+    // Translate points to center
+    var shipPointsCentered = centreOnOrigin(shipPoints, shipCenter);
 
     // Rotate ship coordinates
-    var shipPointsRotated = [null, null, null, null];
-    for (var i = 0; i < shipPointsRotated.length; i++) {
-      shipPointsRotated[i] = [null, null];
-      shipPointsRotated[i][0] = (shipPointsTranslated[i][0] * cosDeg(shipTheta)) - (shipPointsTranslated[i][1] * sinDeg(shipTheta));
-      shipPointsRotated[i][1] = (shipPointsTranslated[i][0] * sinDeg(shipTheta)) + (shipPointsTranslated[i][1] * cosDeg(shipTheta));
-    }
+    var shipPointsRotated = rotateAroundOrigin(shipPointsCentered, shipTheta);
 
     // Translate ship coordinates back to actual position
-    var shipPointsReTranslated = [null, null, null, null];
-    for (var i = 0; i < shipPointsReTranslated.length; i++) {
-      shipPointsReTranslated[i] = [null, null];
-      shipPointsReTranslated[i][0] = shipPointsRotated[i][0] + shipCenter[0];
-      shipPointsReTranslated[i][1] = shipPointsRotated[i][1] + shipCenter[1];
-    }
+    var negativeShipCenter = shipCenter.map(function(e) {return (e * -1)});
+    var shipPointsUnCentered = centreOnOrigin(shipPointsRotated, negativeShipCenter);
 
     // Calculate gradients of each ship line
-    var shipLineGradients = [null, null, null, null];
-    for (var i = 0; i < shipLineGradients.length; i++) {
-      i = parseInt(i);
-      shipLineGradients[i] = ((shipPointsReTranslated[(i + 1) % 4][1]) - (shipPointsReTranslated[i][1])) / ((shipPointsReTranslated[(i + 1) % 4][0]) - (shipPointsReTranslated[i][0]));
-    }
+    var shipLineGradients = calculateGradients(shipPointsUnCentered);
 
     // Calculate constants of each ship line
-    var shipLineConstants = [null, null, null, null];
-    for (var i = 0; i < shipLineConstants.length; i++) {
-      shipLineConstants[i] = shipPointsReTranslated[i][1] - (shipLineGradients[i] * shipPointsReTranslated[i][0]);
-    }
+    var shipLineConstants = calculateConstants(shipPointsUnCentered, shipLineGradients);
 
     // Calculates if ship lines and asteroid circle intersect
     for (var i = 0; i < asteroidArray.length; i++) {
-      // Set up some constants for the quadratic equation formula
-      var r = asteroidArray[i].radius;
-      var lr = asteroidArray[i].position[0] + r;
-      var tr = - asteroidArray[i].position[1] - r;
 
       for (var j = 0; j < shipLineGradients.length; j++) {
-        // More constants
-        var j = parseInt(j);
-        var m = shipLineGradients[j];
-        var c = shipLineConstants[j];
 
-        var x2Const = (m**2) + 1;
-        var x1Const = 2 * ((m * c) + (m * tr) - lr);
-        var x0Const = (lr**2) + (c**2) + (tr**2) - (r**2) + (2 * c * tr);
-
-        // The positions of any intersections
-        var xPlusPos = (- x1Const + Math.sqrt((x1Const**2) - (4 * x2Const * x0Const))) / (2 * x2Const);
-        var xMinusPos = (- x1Const - Math.sqrt((x1Const**2) - (4 * x2Const * x0Const))) / (2 * x2Const);
+        var xIntersectPos = calculateIntersections(shipLineGradients, shipLineConstants, asteroidArray, i, j);
 
         // Collision occurs if intersection is between ends of ship lines
-        if ( (Math.abs(shipPointsReTranslated[j][0] - xMinusPos) > 0.1) || (Math.abs(shipPointsReTranslated[j][0] - xPlusPos) > 0.1) || (Math.abs(shipPointsReTranslated[(j + 1) % 4][0] - xMinusPos) > 0.1) || (Math.abs(shipPointsReTranslated[(j + 1) % 4][0] - xPlusPos) > 0.1) ) {
-          if (xMinusPos < shipPointsReTranslated[j][0] && shipPointsReTranslated[j][0] < xPlusPos) {
-            gameOver = true;
-          }
+        if (
+          (
+            (Math.abs(shipPointsUnCentered[j][0] - xIntersectPos[0]) > 0.1) ||
+            (Math.abs(shipPointsUnCentered[j][0] - xIntersectPos[1]) > 0.1) ||
+            (Math.abs(shipPointsUnCentered[(j + 1) % 4][0] - xIntersectPos[0]) > 0.1) ||
+            (Math.abs(shipPointsUnCentered[(j + 1) % 4][0] - xIntersectPos[1]) > 0.1)
+          ) && (
+            (xIntersectPos[0] < shipPointsUnCentered[j][0] && shipPointsUnCentered[j][0] < xIntersectPos[1]) ||
+            (xIntersectPos[0] < shipPointsUnCentered[(j + 1) % 4][0] && shipPointsUnCentered[(j + 1) % 4][0] < xIntersectPos[1])
+          )
+        ) {
+          gameOver = true;
+        }
+      }
+    }
+  }
 
-          if (xMinusPos < shipPointsReTranslated[(j + 1) % 4][0] && shipPointsReTranslated[(j + 1) % 4][0] < xPlusPos) {
-            gameOver = true;
+  function beamCollision() {
+    var beamsToRemove = [];
+    var asteroidsToRemove = [];
+
+    for (var i = 0; i < beamArray.length; i++) {
+      var beam = beamArray[i];
+      var beamTheta = beam.theta;
+
+      // Initial beam points
+      var beamPoints = initialRectanglePoints(beam.position, beamSize);
+
+      // Get coordinates of center of beam
+      var beamCentre = [null, null];
+      beamCentre[0] = beamPoints[0][0] + (0.5 * beamSize[0]);
+      beamCentre[1] = beamPoints[0][1] + (0.5 * beamSize[1]);
+
+      // Translate beam coordinates to be centered on origin
+      var beamPointsCentered = centreOnOrigin(beamPoints, beamCentre);
+
+      // Rotate beam coordinates
+      var beamPointsRotated = rotateAroundOrigin(beamPointsCentered, beamTheta)
+
+      // Translate beam coordinates back to actual position
+      var negativeBeamCentre = beamCentre.map(function(e) {return (e * -1)});
+      var beamPointsUnCentered = centreOnOrigin(beamPointsRotated, negativeBeamCentre);
+
+      // Calculate gradients of each beam line
+      var beamLineGradients = calculateGradients(beamPointsUnCentered);
+
+      var beamLineConstants = calculateConstants(beamPointsUnCentered, beamLineGradients);
+
+      // Calculates if ship lines and asteroid circle intersect
+      for (var j = 0; j < asteroidArray.length; j++) {
+        var asteroidShot = false;
+
+        for (var k = 0; k < beamLineGradients.length; k++) {
+          var xIntersectPos = calculateIntersections(beamLineGradients, beamLineConstants, asteroidArray, j, k);
+
+          // Collision occurs if intersection is between ends of beam lines
+          if (
+            (xIntersectPos[0] < beamPointsUnCentered[k][0] && beamPointsUnCentered[k][0] < xIntersectPos[1])  ||
+            (xIntersectPos[0] < beamPointsUnCentered[(k + 1) % 4][0] && beamPointsUnCentered[(k + 1) % 4][0] < xIntersectPos[1])
+          ) {
+
+            if (asteroidShot == false) {
+              score += 10;
+              asteroidShot = true;
+            }
+
+            $beamElements.eq(i).addClass("remove-beam");
+            $asteroidElements.eq(j).addClass("remove-asteroid");
+            beamsToRemove.push(i);
+            asteroidsToRemove.push(j);
+
           }
         }
       }
     }
+
+    var newBeamArray = [];
+    var newAsteroidArray = [];
+
+    for (var i = 0; i < beamArray.length; i++) {
+      var putIntoArray = true;
+
+      for (var j = 0; j < beamsToRemove.length; j++) {
+        if (beamsToRemove[j] == i) {
+          putIntoArray = false;
+        }
+      }
+
+      if (putIntoArray == true) {
+        newBeamArray.push(beamArray[i]);
+      }
+    }
+
+    for (var i = 0; i < asteroidArray.length; i++) {
+      var putIntoArray = true;
+
+      for (var j = 0; j < asteroidsToRemove.length; j++) {
+        if (asteroidsToRemove[j] == i) {
+          putIntoArray = false;
+        }
+      }
+
+      if (putIntoArray == true) {
+        newAsteroidArray.push(asteroidArray[i]);
+      }
+    }
+
+    // Does the despawning
+    beamArray = newBeamArray;
+    asteroidArray = newAsteroidArray;
+    $(".remove-beam").remove();
+    $(".remove-asteroid").remove();
+    $beamElements = $(".beam");
+    $asteroidElements = $(".asteroid");
   }
 
   // Despawns asteroid
@@ -464,13 +592,10 @@ $(function() {
     $beamElements = $(".beam");
   }
 
-
-  // makeAsteroid();
-
   // Increases score
   function scoreCounter() {
     if (scoreWaitCount == scoreWait) {
-      score += 10;
+      score += 0;
       scoreWaitCount = 0;
     } else {
       scoreWaitCount++
@@ -479,8 +604,6 @@ $(function() {
     $(".score").html("Score: " + score);
 
   }
-
-
 
   // Starts the game
   function startAsteroids() {
@@ -498,11 +621,14 @@ $(function() {
     resetTimes = 0;
     shipVelocity = [null, null]
     asteroidArray = [];
+    beamArray = [];
     gameOver = false;
     shipTotalV = null;
     shipPosition = [335, 335]
     $(".asteroid").remove();
     $asteroidElements = $(".asteroid");
+    $(".beam").remove();
+    $asteroidElements = $(".beam");
     shipTheta = 0;
     $ship.css("transform", "rotate(" + shipTheta + "deg)");
     $ship.css({"left": "335px", "top": "335px"});
@@ -571,11 +697,12 @@ $(function() {
 
         // Moves ships & asteroid, asteroid collision, asteroid despawn
         changeShipMovement();
+        beamMovement();
+        beamCollision();
+        beamDespawn();
         asteroidMovement();
         asteroidCollision();
         asteroidDespawn();
-        beamMovement();
-        beamDespawn();
         // firePositionMovement();
 
         // Makes new asteroid after random time
