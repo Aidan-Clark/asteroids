@@ -36,6 +36,16 @@ $(function() {
   var scoreWaitCount = 0;
   var score = 0;
 
+  // Shoot values
+  var spacebar = false;
+  var beamInterval = 25;
+  var beamTimer = 0;
+  var beamDespawnTime = 40;
+  var beamVelocity = 15;
+  var beamSize = [5, 10];
+  var beamArray = [];
+  var $beamElements = $(".beam");
+
   // Get left: & top: CSS values
   shipPosition[0] = parseFloat($ship.css("left").match(/\d/g).join(""));
   shipPosition[1] = parseFloat($ship.css("top").match(/\d/g).join(""));
@@ -51,6 +61,18 @@ $(function() {
   function randomValue(min, max) {
     var output = Math.floor((Math.random() * (max - min + 1)) + min);
     return output;
+  }
+
+  function sinDeg(angle) {
+    return Math.sin(angle * (Math.PI / 180));
+  }
+
+  function cosDeg(angle) {
+    return Math.cos(angle * (Math.PI / 180));
+  }
+
+  function pythagoras(a, b) {
+    return Math.sqrt(a**2 + b**2);
   }
 
   // Sets value to true if true if key has been pressed down
@@ -70,6 +92,10 @@ $(function() {
 
       case 68: // d
         wasdKeys[3] = true;
+        break;
+
+      case 32: // spacebar
+        spacebar = true;
         break;
 
       default: return;
@@ -96,6 +122,11 @@ $(function() {
         wasdKeys[3] = false;
         break;
 
+      case 32: //spacebar
+        spacebar = false;
+        beamTimer = 0;
+        break;
+
         default: return;
     }
     event.preventDefault();
@@ -114,8 +145,8 @@ $(function() {
     newShipPosition[1] = shipPosition[1] + (shipVelocity[1] * (refreshTime / 40));
 
 
-    var deltaX = 0.5 * (  (shipSize[0] * Math.cos(shipTheta * (Math.PI/180)) )  -  (shipSize[1] * Math.sin(shipTheta * (Math.PI/180)) )  );
-    var deltaY = 0.5 * (  (shipSize[1] * Math.cos(shipTheta * (Math.PI/180)) )  +  (shipSize[0] * Math.sin(shipTheta * (Math.PI/180)) )  );
+    var deltaX = 0.5 * (  (shipSize[0] * cosDeg(shipTheta))  -  (shipSize[1] * sinDeg(shipTheta))  );
+    var deltaY = 0.5 * (  (shipSize[1] * cosDeg(shipTheta))  +  (shipSize[0] * sinDeg(shipTheta))  );
 
     // Checks if new position causes center of ship to move outside the screen.
     if ((0 < (newShipPosition[0] + deltaX) && (newShipPosition[0] - deltaX) < 700) && (0 < (newShipPosition[1] + deltaY) && (newShipPosition[1] - deltaY) < 700)) {
@@ -151,9 +182,9 @@ $(function() {
   function changeShipVelocity(direction) {
     playThrusters();
     var newShipVelocity = [null, null];
-    newShipVelocity[0] = shipVelocity[0] + (direction * baseVelocity * Math.sin(shipTheta * (Math.PI/180)));
-    newShipVelocity[1] = shipVelocity[1] - (direction * baseVelocity * Math.cos(shipTheta * (Math.PI/180)));
-    var newShipTotalV = Math.sqrt((newShipVelocity[0]**2) + (newShipVelocity[1]**2));
+    newShipVelocity[0] = shipVelocity[0] + (direction * baseVelocity * sinDeg(shipTheta));
+    newShipVelocity[1] = shipVelocity[1] - (direction * baseVelocity * cosDeg(shipTheta));
+    var newShipTotalV = pythagoras(newShipVelocity[0], newShipVelocity[1]);
 
     // Increases velocity if max velocity hasn't been reached.
     if (newShipTotalV >= maxShipVelocity) {
@@ -163,7 +194,7 @@ $(function() {
       shipVelocity[0] = newShipVelocity[0];
       shipVelocity[1] = newShipVelocity[1];
     }
-      shipTotalV = Math.sqrt((shipVelocity[0]**2) + (shipVelocity[1]**2));
+      shipTotalV = pythagoras(shipVelocity[0], shipVelocity[1]);
   }
 
   // Calculates new ship angle
@@ -189,24 +220,59 @@ $(function() {
     this.aliveTime = aliveTime;
   }
 
+  var Beam = function(position, velocity, aliveTime) {
+    this.position = position;
+    this.velocity = velocity;
+    this.aliveTime = aliveTime;
+  }
+
+  function makeBeam() {
+    var velocity = [null, null];
+    velocity[0] = beamVelocity * cosDeg(shipTheta - 90);
+    velocity[1] = beamVelocity * sinDeg(shipTheta - 90);
+
+    var position = [null, null];
+    position[0] = shipPosition[0] + (0.5 * shipSize[0]) + (0.5 * shipSize[1] * sinDeg(shipTheta)) + (0.5 * beamSize[1] * sinDeg(shipTheta)) - (0.5 * beamSize[0]);
+
+    position[1] = shipPosition[1] + (0.5 * shipSize[1]) - (0.5 * shipSize[1] * cosDeg(shipTheta)) - (0.5 * beamSize[1] * cosDeg(shipTheta)) - (0.5 * beamSize[1]);
+
+    var newBeam = new Beam(position, velocity, 0);
+    var $beamDiv = $('<div class="beam"></div>');
+
+    $(".screen").append($beamDiv);
+    beamArray.push(newBeam);
+    $beamElements = $(".beam");
+    $beamElements.last().css({"left": newBeam.position[0] + "px", "top": newBeam.position[1] + "px", "height": beamSize[1], "width": beamSize[0], "transform": "rotate(" + shipTheta + "deg)"});
+  }
+
+  function fireBeam() {
+    // console.log(beamTimer);
+    if (beamTimer == 0) {
+      makeBeam();
+      beamTimer = beamInterval;
+    } else {
+      beamTimer--;
+    }
+  }
+
   // Makes an asteroid
   function makeAsteroid() {
 
     // Makes variables for random new asteroids
-    var startAngle = Math.floor((Math.random() * 360));
+    var startAngle = randomValue(0, 360);
     var velocityAngleMax = startAngle + 90 + (Math.asin(viewingCircleRadius/spawnCircleRadius) * (180/Math.PI));
     var velocityAngleMin = startAngle + 90 - (Math.asin(viewingCircleRadius/spawnCircleRadius) * (180/Math.PI));
     var velocityAngle = randomValue(velocityAngleMin, velocityAngleMax);
     var velocityTotal = randomValue(asteroidVelocityRange[0], asteroidVelocityRange[1]);
     var deathTime = (spawnCircleRadius * 4) / velocityTotal;
     var velocity = [null, null];
-    velocity[0] = velocityTotal * Math.cos(velocityAngle * (Math.PI/180));
-    velocity[1] = velocityTotal * Math.sin(velocityAngle * (Math.PI/180));
+    velocity[0] = velocityTotal * cosDeg(velocityAngle);
+    velocity[1] = velocityTotal * sinDeg(velocityAngle);
 
     var radius = randomValue(asteroidRadiusRange[0], asteroidRadiusRange[1]);
     var position = [null, null];
-    position[0] = (viewingCircleRadius - radius) + (spawnCircleRadius * Math.sin(startAngle * (Math.PI/180)));
-    position[1] = (viewingCircleRadius - radius) - (spawnCircleRadius * Math.cos(startAngle * (Math.PI/180)));
+    position[0] = (viewingCircleRadius - radius) + (spawnCircleRadius * sinDeg(startAngle));
+    position[1] = (viewingCircleRadius - radius) - (spawnCircleRadius * cosDeg(startAngle));
 
     // Makes new asteroid
     var newAsteroid = new Asteroid(position, velocity, radius, false, 0);
@@ -216,7 +282,7 @@ $(function() {
 
     // $(".screen").append($asteroidDiv);
     asteroidArray.push(newAsteroid);
-    $asteroidElements = $(".asteroids");
+    $asteroidElements = $(".asteroid");
     // $asteroidElements.last().fadeIn();
 
 
@@ -232,9 +298,35 @@ $(function() {
       var $asteroidElements = $(".asteroid");
       asteroid.position[0] += asteroid.velocity[0] * (refreshTime / 40);
       asteroid.position[1] += asteroid.velocity[1] * (refreshTime / 40);
-      $asteroidElements.eq(i).css({"left": asteroid.position[0] + "px", "top": asteroid.position[1] + "px", "height": asteroid.radius*2, "width": asteroid.radius*2});
+      $asteroidElements.eq(i).css({"left": asteroid.position[0] + "px", "top": asteroid.position[1] + "px", "height": asteroid.radius*2 + "px", "width": asteroid.radius*2 + "px"});
     }
   }
+
+  function beamMovement() {
+    for (var i = 0; i < beamArray.length; i++) {
+      var beam = beamArray[i];
+      var $beamElements = $(".beam");
+      beam.position[0] += beam.velocity[0] * (refreshTime / 40);
+      beam.position[1] += beam.velocity[1] * (refreshTime / 40);
+      $beamElements.eq(i).css({"left": beam.position[0] + "px", "top": beam.position[1] + "px", "height": beamSize[1] + "px", "width": beamSize[0] + "px"});
+    }
+  }
+
+  // function firePositionMovement() {
+  //   var position = [null, null];
+  //   // position[0] = shipPosition[0] + (0.5 * shipSize[0] * cosDeg(shipTheta)) + (0.5 * beamSize[1] * sinDeg(shipTheta)) - (0.5 * beamSize[0]);
+  //   //
+  //   // position[1] = shipPosition[1] + (0.5 * shipSize[0] * sinDeg(shipTheta)) - (0.5 * beamSize[1] * cosDeg(shipTheta)) - (0.5 * beamSize[1]);
+  //
+  //   position[0] = shipPosition[0] + (0.5 * shipSize[0]) + (0.5 * shipSize[1] * sinDeg(shipTheta)) + (beamSize[1] * sinDeg(shipTheta)) - (0.5 * beamSize[0] * cosDeg(shipTheta));
+  //
+  //   position[1] = shipPosition[1] + (0.5 * shipSize[1]) - (0.5 * shipSize[1] * cosDeg(shipTheta)) - (beamSize[1] * cosDeg(shipTheta)) - (0.5 * beamSize[0] * sinDeg(shipTheta));
+  //
+  //   var $fireElements = $(".fire-position");
+  //   $fireElements.eq(0).css({"left": position[0] + "px", "top": position[1] + "px", "height": "2px", "width": "2px"});
+  // }
+
+
 
   // Test if the ship has collided with an asteroid
   function asteroidCollision() {
@@ -262,8 +354,8 @@ $(function() {
     var shipPointsRotated = [null, null, null, null];
     for (var i = 0; i < shipPointsRotated.length; i++) {
       shipPointsRotated[i] = [null, null];
-      shipPointsRotated[i][0] = (shipPointsTranslated[i][0] * Math.cos(shipTheta * (Math.PI / 180))) - (shipPointsTranslated[i][1] * Math.sin(shipTheta * (Math.PI / 180)));
-      shipPointsRotated[i][1] = (shipPointsTranslated[i][0] * Math.sin(shipTheta * (Math.PI / 180))) + (shipPointsTranslated[i][1] * Math.cos(shipTheta * (Math.PI / 180)));
+      shipPointsRotated[i][0] = (shipPointsTranslated[i][0] * cosDeg(shipTheta)) - (shipPointsTranslated[i][1] * sinDeg(shipTheta));
+      shipPointsRotated[i][1] = (shipPointsTranslated[i][0] * sinDeg(shipTheta)) + (shipPointsTranslated[i][1] * cosDeg(shipTheta));
     }
 
     // Translate ship coordinates back to actual position
@@ -331,7 +423,7 @@ $(function() {
       asteroid.aliveTime++;
       var xCoord = asteroid.position[0];
       var yCoord = asteroid.position[1];
-      var distanceFromCenter = Math.sqrt((xCoord - viewingCircleRadius + asteroid.radius)**2 + (yCoord - viewingCircleRadius + asteroid.radius)**2);
+      var distanceFromCenter = pythagoras(xCoord - viewingCircleRadius + asteroid.radius, yCoord - viewingCircleRadius + asteroid.radius);
 
       // Keeps track if asteroid has entered screen yet
       if (distanceFromCenter <= viewingCircleRadius) {
@@ -353,8 +445,27 @@ $(function() {
     $asteroidElements = $(".asteroid");
   }
 
+  function beamDespawn() {
+    var newBeamArray = [];
 
-  makeAsteroid();
+    for (var i = 0; i < beamArray.length; i++) {
+      var beam = beamArray[i];
+      if (beam.aliveTime >= beamDespawnTime) {
+        $beamElements.eq(i).addClass("remove-beam");
+      } else {
+        beam.aliveTime++
+        newBeamArray.push(beam);
+      }
+    }
+
+    // Does the despawning
+    beamArray = newBeamArray;
+    $(".remove-beam").remove();
+    $beamElements = $(".beam");
+  }
+
+
+  // makeAsteroid();
 
   // Increases score
   function scoreCounter() {
@@ -454,11 +565,18 @@ $(function() {
           pauseGas();
         }
 
+        if (spacebar == true) {
+          fireBeam();
+        }
+
         // Moves ships & asteroid, asteroid collision, asteroid despawn
         changeShipMovement();
         asteroidMovement();
         asteroidCollision();
         asteroidDespawn();
+        beamMovement();
+        beamDespawn();
+        // firePositionMovement();
 
         // Makes new asteroid after random time
         if (currentTime > timeToSpawn) {

@@ -123,12 +123,23 @@ main {
   font-size: 20px;
 }
 
+/* .fire-position {
+  background-color: green;
+  border-radius: 50%;
+  height: 10px;
+  width: 10px;
+  position: absolute;
+  left: 335px;
+  top: 335px;
+} */
+
 .ship {
   position: relative;
   left: 335px;
   top: 335px;
   transform: rotate(0deg);
   overflow: visible;
+  /* background-color: red; */
 }
 
 .ship:before {
@@ -149,6 +160,17 @@ background-size: cover;
   position: absolute;
   background-image: url('../images/asteroid.jpg');
   background-position: right
+}
+
+.beam {
+  position: absolute;
+  left: 335px;
+  top: 335px;
+  transform: rotate(0deg);
+  overflow: visible;
+  background-color: blue;
+  width: 5px;
+  height: 20px;
 }
 
 .score {
