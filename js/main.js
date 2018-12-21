@@ -27,7 +27,7 @@ $(function() {
     spawnCircleRadius = 645;
     asteroidArray = [];
     $asteroidElements = $(".asteroid");
-    asteroidSpawnTime = [500, 1000];
+    asteroidSpawnTime = [500, 1500];
   }
   setAsteroidVariables();
 
