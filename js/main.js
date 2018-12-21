@@ -291,7 +291,6 @@ $(function() {
 
   // Determines when to make a laser beam
   function fireBeam() {
-    // console.log(beamTimer);
     if (beamTimer == 0) {
       makeBeam();
       playBeam();
