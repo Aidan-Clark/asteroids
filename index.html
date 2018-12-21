@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Asteroids</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="js/main.js"></script>
+  </head>
+  <body>
+
+    <audio class="sound-thrust" src="sounds/ship-thrusters.mp3"></audio>
+    <audio class="sound-beam" src="sounds/laser.mp3"></audio>
+    <audio class="sound-gameover" src="sounds/game-over.mp3"></audio>
+    <audio class="sound-buttonclick" src="sounds/button-click.mp3"></audio>
+    <audio class="sound-asteroidhit" src="sounds/asteroid-hit.mp3"></audio>
+
+    <main>
+      <div class="top-bar"></div>
+      <div class="middle-bar">
+
+        <div class="score-div">
+          <h1 class="score">Score:</h1>
+        </div>
+
+        <div class="center-screen">
+          <div class="instructions">
+            <div class="instructions-div">
+
+              <h1>ASTEROIDS</h1>
+              <p>Use the WASD keys to move</p>
+              <p>Spacebar to shoot</p>
+              <p>Destroy asteroids to earn points</p>
+              <p>Try to get a high score!</p>
+
+              <button type="button" class="start-button">START</button>
+
+            </div>
+          </div>
+
+          <div class="screen">
+            <div class="ship"></div>
+            <div class="fire-position">
+
+            </div>
+          </div>
+
+          <div class="game-over">
+            <h1>Game Over</h1>
+            <p>Your Score: 0</p>
+            <button type="button" class="reset-button">PLAY AGAIN?</button>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="bottom-bar"></div>
+
+    </main>
+
+  </body>
+</html>
